@@ -99,7 +99,7 @@ export async function executeL1Action<T extends AnySuccessResponse>(
       
       console.log('[DEBUG] signL1Action 签名结果 (单签):', JSON.stringify(signature, null, 2));
 
-      
+      console.log('[DEBUG] executeL1Action 请求数据:', JSON.stringify({ action, signature, nonce, vaultAddress, expiresAfter }, null, 2));
 
       // Send a request
       const response = await transport.request(
@@ -110,8 +110,13 @@ export async function executeL1Action<T extends AnySuccessResponse>(
       assertSuccessResponse(response);
       return response as T;
     }
-  } finally {
+  } catch (error) {
+    console.error('[DEBUG] executeL1Action 错误:', error);
+    throw error;
+  }
+  finally {
     // Release semaphore
+    console.log('[DEBUG] executeL1Action 释放 semaphore');
     sem.release();
   }
 }

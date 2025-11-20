@@ -129,7 +129,7 @@ export class HttpTransport implements IRequestTransport, HttpTransportOptions {
           },
           keepalive: true,
           method: "POST",
-          signal: this.timeout ? AbortSignal_.timeout(this.timeout) : undefined,
+          signal: undefined,
         },
         this.fetchOptions,
         { signal },
@@ -142,15 +142,37 @@ export class HttpTransport implements IRequestTransport, HttpTransportOptions {
         if (customRequest instanceof Request) request = customRequest;
       }
 
-      // Send the Request and wait for a Response
-      let response = await fetch(request)
-        .catch(async (error) => {
+      // Send the Request and wait for a Response (with simple retry logic)
+      let response: Response;
+      let attempt = 0;
+      const maxRetries = 3;
+      // Retry a few times on transport-level errors before failing
+      // (e.g. transient network glitches, timeouts, etc.)
+      // Does not change behavior for successful responses.
+      // onError hook is still called on each failure.
+      while (true) {
+        try {
+          console.log('[DEBUG] Before fetch HttpTransport request:', JSON.stringify(request, null, 2));
+          response = await fetch(request.clone());
+          console.log('[DEBUG] After fetch HttpTransport response:', JSON.stringify(response, null, 2));
+          break;
+        } catch (error) {
+          console.log('[DEBUG] HttpTransport error:', JSON.stringify(error, null, 2));
           if (this.onError) {
+            console.log('[DEBUG] HttpTransport onError error:', JSON.stringify(error, null, 2));
             const customError = await this.onError(error);
+            console.log('[DEBUG] HttpTransport onError custom error:', JSON.stringify(customError, null, 2));
             if (customError instanceof Error) error = customError;
+            console.log('[DEBUG] HttpTransport onError error:', JSON.stringify(error, null, 2));
           }
-          throw error;
-        });
+          attempt++;
+          console.log('[DEBUG] HttpTransport attempt:', attempt);
+          if (attempt >= maxRetries) {
+            console.log('[DEBUG] HttpTransport max retries reached, throwing error');
+            throw error;
+          }
+        }
+      }
 
       // Call the onResponse callback, if provided
       if (this.onResponse) {

@@ -190,10 +190,12 @@ export async function signTypedData(args: {
   primaryType: string;
   message: Record<string, unknown>;
 }): Promise<Signature> {
+
   const { wallet, domain, types, primaryType, message } = args;
 
   let signature: `0x${string}`;
   if (v.is(AbstractViemJsonRpcAccountSchema, wallet) || v.is(AbstractViemLocalAccountSchema, wallet)) {
+    console.log('[DEBUG] signTypedData viem wallet:', JSON.stringify(wallet, null, 2));
     try {
       signature = await wallet.signTypedData({
         domain,
@@ -210,11 +212,13 @@ export async function signTypedData(args: {
         message,
       }) as `0x${string}`;
     } catch (error) {
+      console.log('[DEBUG] signTypedData viem wallet error:', JSON.stringify(error, null, 2));
       throw new AbstractWalletError("Failed to sign typed data with viem wallet. See cause for details.", {
         cause: error,
       });
     }
   } else if (v.is(AbstractEthersV6Signer, wallet)) {
+    console.log('[DEBUG] signTypedData ethers v6 wallet:', JSON.stringify(wallet, null, 2));
     try {
       signature = await wallet.signTypedData(domain, types, message) as `0x${string}`;
     } catch (error) {
@@ -223,6 +227,7 @@ export async function signTypedData(args: {
       });
     }
   } else if (v.is(AbstractEthersV5Signer, wallet)) {
+    console.log('[DEBUG] signTypedData ethers v5 wallet:', JSON.stringify(wallet, null, 2));
     try {
       signature = await wallet._signTypedData(domain, types, message) as `0x${string}`;
     } catch (error) {

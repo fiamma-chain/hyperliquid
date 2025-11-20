@@ -1,5 +1,6 @@
 import { keccak_256 } from "@noble/hashes/sha3.js";
 import * as secp from "@noble/secp256k1";
+import { ecdsaSign } from "secp256k1";
 
 export interface Types {
   [type: string]: {
@@ -31,16 +32,22 @@ export async function signTypedData(args: {
     primaryType,
     message,
   } = args;
-
+  console.log('[DEBUG] signTypedData privateKey:', JSON.stringify(privateKey, null, 2));
   const hash = hashTypedData({ domain, types, primaryType, message });
-
+  console.log('[DEBUG] signTypedData hash:', JSON.stringify(hash, null, 2));
   const pk = typeof privateKey === "string" ? secp.etc.hexToBytes(cleanHex(privateKey)) : privateKey;
-  const sigr = await secp.signAsync(hash, pk, { prehash: false, format: "recovered" });
+  console.log('[DEBUG] signTypedData pk:', JSON.stringify(pk, null, 2));
+  // const sigr = secp.sign(hash, pk, { prehash: false, format: "recovered" });
+  const { signature, recid } = ecdsaSign(hash, pk);
+  const sigr = new Uint8Array(65);
+  sigr[0] = recid;
+  sigr.set(signature, 1);
+  console.log('[DEBUG] signTypedData sigr:', JSON.stringify(sigr, null, 2));
 
   const r = secp.etc.bytesToHex(sigr.slice(1, 33));
   const s = secp.etc.bytesToHex(sigr.slice(33, 65));
   const v = (sigr[0] + 27).toString(16).padStart(2, "0");
-
+  console.log('[DEBUG] signTypedData v:', JSON.stringify(v, null, 2));
   return `0x${r}${s}${v}`;
 }
 

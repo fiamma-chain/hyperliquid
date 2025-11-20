@@ -78,6 +78,16 @@ export async function executeL1Action<T extends AnySuccessResponse>(
       const { wallet } = config;
 
       // Sign an L1 action
+      const signData = {
+        wallet: await getWalletAddress(wallet),
+        action,
+        nonce,
+        isTestnet: transport.isTestnet,
+        vaultAddress,
+        expiresAfter,
+      };
+      console.log('[DEBUG] signL1Action 签名数据 (单签):', JSON.stringify(signData, null, 2));
+      
       const signature = await signL1Action({
         wallet,
         action,
@@ -86,6 +96,10 @@ export async function executeL1Action<T extends AnySuccessResponse>(
         vaultAddress,
         expiresAfter,
       });
+      
+      console.log('[DEBUG] signL1Action 签名结果 (单签):', JSON.stringify(signature, null, 2));
+
+      
 
       // Send a request
       const response = await transport.request(

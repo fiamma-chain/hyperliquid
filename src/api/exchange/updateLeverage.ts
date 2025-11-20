@@ -148,5 +148,8 @@ export async function updateLeverage(
       ? config.defaultExpiresAfter
       : await config.defaultExpiresAfter?.(),
   });
-  return await executeL1Action(config, request, opts?.signal);
+  console.log('[DEBUG] updateLeverage 请求数据:', JSON.stringify(request, null, 2));
+  const response = await executeL1Action(config, request, opts?.signal);
+  console.log('[DEBUG] updateLeverage 响应数据:', JSON.stringify(response, null, 2));
+  return response as UpdateLeverageSuccessResponse;
 }

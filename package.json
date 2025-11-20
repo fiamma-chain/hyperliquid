@@ -1,5 +1,5 @@
 {
-  "name": "@nktkas/hyperliquid",
+  "name": "@fiamma/hyperliquid",
   "version": "0.27.0",
   "description": "Unofficial Hyperliquid API SDK for all major JS runtimes, written in TypeScript.",
   "keywords": [

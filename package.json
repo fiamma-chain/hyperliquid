@@ -64,10 +64,12 @@
     "@nktkas/rews": "^1.2.0",
     "@noble/hashes": "^2.0.1",
     "@noble/secp256k1": "^3.0.0",
+    "secp256k1": "^5.0.1",
     "valibot": "1.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "@types/secp256k1": "^4.0.7",
     "@types/ws": "^8.18.1",
     "dotenv": "^17.2.3",
     "ethers5": "npm:ethers@^5.8.0",

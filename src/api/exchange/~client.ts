@@ -22,7 +22,7 @@ import { evmUserModify } from "./evmUserModify.ts";
 import { linkStakingUser } from "./linkStakingUser.ts";
 import { modify } from "./modify.ts";
 import { multiSig } from "./multiSig.ts";
-import { order } from "./order.ts";
+import { createOrderParams, order } from "./order.ts";
 import { noop } from "./noop.ts";
 import { perpDeploy } from "./perpDeploy.ts";
 import { registerReferrer } from "./registerReferrer.ts";
@@ -773,6 +773,46 @@ export class ExchangeClient<
     ...args: OmitFirst<OverloadedParameters<typeof order>>
   ): ReturnType<typeof order> {
     return order(this, ...args);
+  }
+
+  /**
+   * Create order parameters.
+   * @param params - Parameters specific to the API request.
+   * @param opts - Request execution options.
+   * @returns L1 action parameters.
+   *
+   * @throws {ApiRequestError} When the API returns an unsuccessful response.
+   * @throws {TransportError} When the transport layer throws an error.
+   *
+   * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#place-an-order
+   * @example
+   * ```ts
+   * import * as hl from "@nktkas/hyperliquid";
+   *
+   * const pk = "0x..."; // viem, ethers or private key
+   * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+   *
+   * const client = new hl.ExchangeClient({ transport, wallet: pk });
+   * const data = await client.createOrderParams({
+   *   orders: [
+   *     {
+   *       a: 0,
+   *       b: true,
+   *       p: "30000",
+   *       s: "0.1",
+   *       r: false,
+   *       t: { limit: { tif: "Gtc" } },
+   *       c: "0x...",
+   *     },
+   *   ],
+   *   grouping: "na",
+   * });
+   * ```
+   */
+  createOrderParams(
+    ...args: OmitFirst<OverloadedParameters<typeof createOrderParams>>
+  ): ReturnType<typeof createOrderParams> {
+    return createOrderParams(this, ...args);
   }
 
   /**
@@ -1668,4 +1708,4 @@ export type * from "./vaultModify.ts";
 export type * from "./vaultTransfer.ts";
 export type * from "./withdraw3.ts";
 
-export { ApiRequestError, type ExchangeRequestConfig, type MultiSignRequestConfig } from "./_base/mod.ts";
+export { ApiRequestError, type ExchangeRequestConfig, type MultiSignRequestConfig, type L1ActionParams } from "./_base/mod.ts";

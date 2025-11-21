@@ -71,3 +71,32 @@ export const SuccessResponse = /* @__PURE__ */ (() => {
   );
 })();
 export type SuccessResponse = v.InferOutput<typeof SuccessResponse>;
+
+export const L1ActionParams = /* @__PURE__ */ (() => {
+  return v.pipe(
+    v.object({
+      action: v.pipe(
+        v.record(v.string(), v.unknown()),
+        v.description("Action."),
+      ),
+      signature: v.pipe(
+        Signature,
+        v.description("Cryptographic signature."),
+      ),
+      nonce: v.pipe(
+        v.number(),
+        v.description("Unique request identifier (current timestamp in ms)."),
+      ),
+      vaultAddress: v.pipe(
+        v.optional(v.string()),
+        v.description("Vault address."),
+      ),
+      expiresAfter: v.pipe(
+        v.optional(v.number()),
+        v.description("Expiration time in ms since the epoch."),
+      ),
+    }),
+    v.description("L1 action parameters."),
+  );
+})();
+export type L1ActionParams = v.InferOutput<typeof L1ActionParams>;

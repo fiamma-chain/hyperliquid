@@ -10,7 +10,64 @@ import {
 } from "../../../signing/mod.ts";
 import { assertSuccessResponse } from "./_errors.ts";
 import type { AnyResponse, AnySuccessResponse, ExchangeRequestConfig, MultiSignRequestConfig } from "./_types.ts";
+import type { L1ActionParams } from "./_schemas.ts";
 import { getNonce } from "./_nonce.ts";
+
+export async function createL1ActionParams(
+  config: ExchangeRequestConfig | MultiSignRequestConfig,
+  request: {
+    action: Record<string, unknown>;
+    vaultAddress?: `0x${string}`;
+    expiresAfter?: number;
+  },
+): Promise<L1ActionParams> {
+  const { transport } = config;
+  const { action, vaultAddress, expiresAfter } = request;
+
+  // Sequential request execution to prevent nonce race conditions at the network layer
+  const walletAddress = "signers" in config
+    ? await getWalletAddress(config.signers[0])
+    : await getWalletAddress(config.wallet);
+
+  // Main logic
+  try {
+    const nonce = await getNonce(config, walletAddress);
+
+    // Multi-signature request
+    if ("signers" in config) {
+      throw new Error("Multi-signature request is not supported");
+    } else { // Single-signature request
+      const { wallet } = config;
+
+      // Sign an L1 action
+      const signData = {
+        wallet: await getWalletAddress(wallet),
+        action,
+        nonce,
+        isTestnet: transport.isTestnet,
+        vaultAddress,
+        expiresAfter,
+      };
+      console.log('[DEBUG] signL1Action 签名数据 (单签):', JSON.stringify(signData, null, 2));
+      
+      const signature = await signL1Action({
+        wallet,
+        action,
+        nonce,
+        isTestnet: transport.isTestnet,
+        vaultAddress,
+        expiresAfter,
+      });
+
+      console.log('[DEBUG] signL1Action 响应数据:', action,signature, nonce, vaultAddress, expiresAfter);
+
+      return { action, signature, nonce, vaultAddress, expiresAfter };
+    }
+  } catch(error){
+    console.log('[DEBUG] signL1Action 错误:', JSON.stringify(error, null, 2));
+    throw error;
+  }
+}
 
 export async function executeL1Action<T extends AnySuccessResponse>(
   config: ExchangeRequestConfig | MultiSignRequestConfig,
@@ -96,8 +153,6 @@ export async function executeL1Action<T extends AnySuccessResponse>(
         vaultAddress,
         expiresAfter,
       });
-      
-      console.log('[DEBUG] signL1Action 签名结果 (单签):', JSON.stringify(signature, null, 2));
 
       console.log('[DEBUG] signL1Action 响应数据:', action,signature, nonce, vaultAddress, expiresAfter);
 
@@ -115,7 +170,6 @@ export async function executeL1Action<T extends AnySuccessResponse>(
     console.log('[DEBUG] signL1Action 错误:', JSON.stringify(error, null, 2));
     throw error;
   } finally {
-    console.log('[DEBUG] signL1Action 释放 semaphore');
     // Release semaphore
     console.log('[DEBUG] executeL1Action 释放 semaphore');
     sem.release();

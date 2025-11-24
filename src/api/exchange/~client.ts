@@ -41,7 +41,7 @@ import { tokenDelegate } from "./tokenDelegate.ts";
 import { twapCancel } from "./twapCancel.ts";
 import { twapOrder } from "./twapOrder.ts";
 import { updateIsolatedMargin } from "./updateIsolatedMargin.ts";
-import { updateLeverage } from "./updateLeverage.ts";
+import { createUpdateLeverageParams, updateLeverage } from "./updateLeverage.ts";
 import { usdClassTransfer } from "./usdClassTransfer.ts";
 import { usdSend } from "./usdSend.ts";
 import { userDexAbstraction } from "./userDexAbstraction.ts";
@@ -1370,6 +1370,37 @@ export class ExchangeClient<
     ...args: OmitFirst<OverloadedParameters<typeof updateLeverage>>
   ): ReturnType<typeof updateLeverage> {
     return updateLeverage(this, ...args);
+  }
+
+  /**
+   * Create update leverage parameters.
+   * @param params - Parameters specific to the API request.
+   * @param opts - Request execution options.
+   * @returns L1 action parameters.
+   *
+   * @throws {ApiRequestError} When the API returns an unsuccessful response.
+   * @throws {TransportError} When the transport layer throws an error.
+   *
+   * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#update-leverage
+   * @example
+   * ```ts
+   * import * as hl from "@nktkas/hyperliquid";
+   *
+   * const pk = "0x..."; // viem, ethers or private key
+   * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+   *
+   * const client = new hl.ExchangeClient({ transport, wallet: pk });
+   * const data = await client.createUpdateLeverageParams({
+   *   asset: 0,
+   *   isCross: true,
+   *   leverage: 5,
+   * });
+   * ```
+   */
+  createUpdateLeverageParams(
+    ...args: OmitFirst<OverloadedParameters<typeof createUpdateLeverageParams>>
+  ): ReturnType<typeof createUpdateLeverageParams> {
+    return createUpdateLeverageParams(this, ...args);
   }
 
   /**

@@ -10,7 +10,7 @@ import {
 } from "../../../signing/mod.ts";
 import { assertSuccessResponse } from "./_errors.ts";
 import type { AnyResponse, AnySuccessResponse, ExchangeRequestConfig, MultiSignRequestConfig } from "./_types.ts";
-import type { L1ActionParams } from "./_schemas.ts";
+import type { L1ActionParams, L1UserSignedActionParams } from "./_schemas.ts";
 import { getNonce } from "./_nonce.ts";
 
 export async function createL1ActionParams(
@@ -174,6 +174,49 @@ export async function executeL1Action<T extends AnySuccessResponse>(
     console.log('[DEBUG] executeL1Action 释放 semaphore');
     sem.release();
   }
+}
+
+export async function createUserSignedActionParams(
+  config: ExchangeRequestConfig | MultiSignRequestConfig,
+  request: {
+    action:
+      & {
+        signatureChainId: `0x${string}`;
+        [key: string]: unknown;
+      }
+      & (
+        | { nonce: number; time?: undefined }
+        | { time: number; nonce?: undefined }
+      );
+  },
+  types: {
+    [key: string]: {
+      name: string;
+      type: string;
+    }[];
+  },
+): Promise<L1UserSignedActionParams> {
+  if ("signers" in config) {
+    throw new Error("Multi-signature request is not supported");
+  }
+
+  const walletAddress = await getWalletAddress(config.wallet);
+  const nonce = await getNonce(config, walletAddress);
+
+  if ("time" in request.action) request.action.time = nonce;
+  if ("nonce" in request.action) request.action.nonce = nonce;
+
+  const signature = await signUserSignedAction({
+    wallet: config.wallet,
+    action: request.action,
+    types,
+  });
+
+  return {
+    action: request.action,
+    signature,
+    nonce,
+  };
 }
 
 export async function executeUserSignedAction<T extends AnySuccessResponse>(

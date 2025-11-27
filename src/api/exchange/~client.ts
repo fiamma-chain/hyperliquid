@@ -49,7 +49,7 @@ import { validatorL1Stream } from "./validatorL1Stream.ts";
 import { vaultDistribute } from "./vaultDistribute.ts";
 import { vaultModify } from "./vaultModify.ts";
 import { vaultTransfer } from "./vaultTransfer.ts";
-import { withdraw3 } from "./withdraw3.ts";
+import { createWithdraw3Params, withdraw3 } from "./withdraw3.ts";
 
 /**
  * A client for interacting with the Hyperliquid Exchange API.
@@ -1649,6 +1649,36 @@ export class ExchangeClient<
     ...args: OmitFirst<OverloadedParameters<typeof withdraw3>>
   ): ReturnType<typeof withdraw3> {
     return withdraw3(this, ...args);
+  }
+
+  /**
+   * Create withdraw3 parameters.
+   * @param params - Parameters specific to the API request.
+   * @param opts - Request execution options.
+   * @returns User-signed action parameters.
+   *
+   * @throws {ApiRequestError} When the API returns an unsuccessful response.
+   * @throws {TransportError} When the transport layer throws an error.
+   *
+   * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#initiate-a-withdrawal-request
+   * @example
+   * ```ts
+   * import * as hl from "@nktkas/hyperliquid";
+   *
+   * const pk = "0x..."; // viem, ethers or private key
+   * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+   *
+   * const client = new hl.ExchangeClient({ transport, wallet: pk });
+   * const data = await client.createWithdraw3Params({
+   *   destination: "0x...",
+   *   amount: "1",
+   * });
+   * ```
+   */
+  createWithdraw3Params(
+    ...args: OmitFirst<OverloadedParameters<typeof createWithdraw3Params>>
+  ): ReturnType<typeof createWithdraw3Params> {
+    return createWithdraw3Params(this, ...args);
   }
 }
 

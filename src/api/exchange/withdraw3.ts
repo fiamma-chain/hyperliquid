@@ -5,7 +5,13 @@ import * as v from "valibot";
 // ============================================================
 
 import { Address, Hex, UnsignedDecimal, UnsignedInteger } from "../_base.ts";
-import { ErrorResponse, Signature, SuccessResponse } from "./_base/mod.ts";
+import {
+  createUserSignedActionParams,
+  ErrorResponse,
+  L1UserSignedActionParams,
+  Signature,
+  SuccessResponse,
+} from "./_base/mod.ts";
 
 /**
  * Initiate a withdrawal request.
@@ -159,4 +165,52 @@ export async function withdraw3(
     },
   });
   return await executeUserSignedAction(config, request, Withdraw3Types, opts?.signal);
+}
+
+/**
+ * Create withdraw3 parameters.
+ * @param config - General configuration for Exchange API requests.
+ * @param params - Parameters specific to the API request.
+ * @param opts - Request execution options.
+ * @returns User-signed action parameters.
+ *
+ * @throws {ApiRequestError} When the API returns an unsuccessful response.
+ * @throws {TransportError} When the transport layer throws an error.
+ *
+ * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#initiate-a-withdrawal-request
+ * @example
+ * ```ts
+ * import * as hl from "@nktkas/hyperliquid";
+ *
+ * const pk = "0x..."; // viem, ethers or private key
+ * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+ *
+ * const client = new hl.ExchangeClient({ transport, wallet: pk });
+ * const params = await client.createWithdraw3Params(
+ *   { transport, wallet },
+ *   { destination: "0x...", amount: "1" },
+ * );
+ * ```
+ */
+export async function createWithdraw3Params(
+  config: ExchangeRequestConfig | MultiSignRequestConfig,
+  params: DeepImmutable<Withdraw3Parameters>,
+  _opts?: Withdraw3Options,
+): Promise<L1UserSignedActionParams> {
+  const request = parser(Withdraw3Request)({
+    action: {
+      type: "withdraw3",
+      hyperliquidChain: config.transport.isTestnet ? "Testnet" : "Mainnet",
+      signatureChainId: await getSignatureChainId(config),
+      time: 0, // Placeholder; actual time generated in `createUserSignedActionParams`
+      ...params,
+    },
+    nonce: 0, // Placeholder; actual nonce generated in `createUserSignedActionParams`
+    signature: { // Placeholder; actual signature generated in `createUserSignedActionParams`
+      r: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      s: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      v: 27,
+    },
+  });
+  return await createUserSignedActionParams(config, request, Withdraw3Types);
 }

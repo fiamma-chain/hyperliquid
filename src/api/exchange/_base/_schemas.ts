@@ -100,3 +100,25 @@ export const L1ActionParams = /* @__PURE__ */ (() => {
   );
 })();
 export type L1ActionParams = v.InferOutput<typeof L1ActionParams>;
+
+/** User-signed action parameters. */
+export const L1UserSignedActionParams = /* @__PURE__ */ (() => {
+  return v.pipe(
+    v.object({
+      action: v.pipe(
+        v.record(v.string(), v.unknown()),
+        v.description("User-signed action."),
+      ),
+      signature: v.pipe(
+        Signature,
+        v.description("Cryptographic signature."),
+      ),
+      nonce: v.pipe(
+        v.number(),
+        v.description("Unique request identifier (current timestamp in ms)."),
+      ),
+    }),
+    v.description("User-signed action parameters."),
+  );
+})();
+export type L1UserSignedActionParams = v.InferOutput<typeof L1UserSignedActionParams>;

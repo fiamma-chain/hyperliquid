@@ -5,7 +5,13 @@ import * as v from "valibot";
 // ============================================================
 
 import { Address, Integer, UnsignedInteger } from "../_base.ts";
-import { ErrorResponse, Signature, SuccessResponse } from "./_base/mod.ts";
+import {
+  createL1ActionParams,
+  ErrorResponse,
+  L1ActionParams,
+  Signature,
+  SuccessResponse,
+} from "./_base/mod.ts";
 
 /**
  * Add or remove margin from isolated position.
@@ -149,4 +155,53 @@ export async function updateIsolatedMargin(
       : await config.defaultExpiresAfter?.(),
   });
   return await executeL1Action(config, request, opts?.signal);
+}
+
+/**
+ * Create update isolated margin parameters.
+ * @param config - General configuration for Exchange API requests.
+ * @param params - Parameters specific to the API request.
+ * @param opts - Request execution options.
+ * @returns L1 action parameters.
+ *
+ * @throws {ApiRequestError} When the API returns an unsuccessful response.
+ * @throws {TransportError} When the transport layer throws an error.
+ *
+ * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#update-isolated-margin
+ * @example
+ * ```ts
+ * import * as hl from "@nktkas/hyperliquid";
+ *
+ * const pk = "0x..."; // viem, ethers or private key
+ * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+ *
+ * const client = new hl.ExchangeClient({ transport, wallet: pk });
+ * const params = await client.createUpdateIsolatedMarginParams(
+ *   { transport, wallet },
+ *   { asset: 0, isBuy: true, ntli: 1 * 1e6 },
+ * );
+ * ```
+ */
+export async function createUpdateIsolatedMarginParams(
+  config: ExchangeRequestConfig | MultiSignRequestConfig,
+  params: DeepImmutable<UpdateIsolatedMarginParameters>,
+  opts?: UpdateIsolatedMarginOptions,
+): Promise<L1ActionParams> {
+  const request = parser(UpdateIsolatedMarginRequest)({
+    action: {
+      type: "updateIsolatedMargin",
+      ...params,
+    },
+    nonce: 0, // Placeholder; actual nonce generated in `executeL1Action`
+    signature: { // Placeholder; actual signature generated in `executeL1Action`
+      r: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      s: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      v: 27,
+    },
+    vaultAddress: opts?.vaultAddress ?? config.defaultVaultAddress,
+    expiresAfter: typeof config.defaultExpiresAfter === "number"
+      ? config.defaultExpiresAfter
+      : await config.defaultExpiresAfter?.(),
+  });
+  return await createL1ActionParams(config, request);
 }

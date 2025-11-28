@@ -8,7 +8,7 @@ import { agentEnableDexAbstraction } from "./agentEnableDexAbstraction.ts";
 import { approveAgent } from "./approveAgent.ts";
 import { approveBuilderFee } from "./approveBuilderFee.ts";
 import { batchModify } from "./batchModify.ts";
-import { cancel } from "./cancel.ts";
+import { cancel, createCancelParams } from "./cancel.ts";
 import { cancelByCloid } from "./cancelByCloid.ts";
 import { cDeposit } from "./cDeposit.ts";
 import { claimRewards } from "./claimRewards.ts";
@@ -282,6 +282,37 @@ export class ExchangeClient<
     ...args: OmitFirst<OverloadedParameters<typeof cancel>>
   ): ReturnType<typeof cancel> {
     return cancel(this, ...args);
+  }
+
+  /**
+   * Create cancel parameters.
+   * @param params - Parameters specific to the API request.
+   * @param opts - Request execution options.
+   * @returns L1 action parameters.
+   *
+   * @throws {ApiRequestError} When the API returns an unsuccessful response.
+   * @throws {TransportError} When the transport layer throws an error.
+   *
+   * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s
+   * @example
+   * ```ts
+   * import * as hl from "@nktkas/hyperliquid";
+   *
+   * const pk = "0x..."; // viem, ethers or private key
+   * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+   *
+   * const client = new hl.ExchangeClient({ transport, wallet: pk });
+   * const data = await client.createCancelParams({
+   *   cancels: [
+   *     { a: 0, o: 123 },
+   *   ],
+   * });
+   * ```
+   */
+  createCancelParams(
+    ...args: OmitFirst<OverloadedParameters<typeof createCancelParams>>
+  ): ReturnType<typeof createCancelParams> {
+    return createCancelParams(this, ...args);
   }
 
   /**

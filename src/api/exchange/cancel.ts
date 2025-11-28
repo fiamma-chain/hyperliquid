@@ -5,7 +5,7 @@ import * as v from "valibot";
 // ============================================================
 
 import { Address, UnsignedInteger } from "../_base.ts";
-import { Signature } from "./_base/mod.ts";
+import { createL1ActionParams, L1ActionParams, Signature } from "./_base/mod.ts";
 
 /**
  * Cancel order(s).
@@ -193,4 +193,57 @@ export async function cancel(
       : await config.defaultExpiresAfter?.(),
   });
   return await executeL1Action(config, request, opts?.signal);
+}
+
+/**
+ * Create cancel parameters.
+ * @param config - General configuration for Exchange API requests.
+ * @param params - Parameters specific to the API request.
+ * @param opts - Request execution options.
+ * @returns L1 action parameters.
+ *
+ * @throws {ApiRequestError} When the API returns an unsuccessful response.
+ * @throws {TransportError} When the transport layer throws an error.
+ *
+ * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s
+ * @example
+ * ```ts
+ * import * as hl from "@nktkas/hyperliquid";
+ *
+ * const pk = "0x..."; // viem, ethers or private key
+ * const transport = new hl.HttpTransport(); // or `WebSocketTransport`
+ *
+ * const client = new hl.ExchangeClient({ transport, wallet: pk });
+ * const params = await client.createCancelParams(
+ *   { transport, wallet },
+ *   {
+ *     cancels: [
+ *       { a: 0, o: 123 },
+ *     ],
+ *   },
+ * );
+ * ```
+ */
+export async function createCancelParams(
+  config: ExchangeRequestConfig | MultiSignRequestConfig,
+  params: DeepImmutable<CancelParameters>,
+  opts?: CancelOptions,
+): Promise<L1ActionParams> {
+  const request = parser(CancelRequest)({
+    action: {
+      type: "cancel",
+      ...params,
+    },
+    nonce: 0, // Placeholder; actual nonce generated in `executeL1Action`
+    signature: { // Placeholder; actual signature generated in `executeL1Action`
+      r: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      s: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      v: 27,
+    },
+    vaultAddress: opts?.vaultAddress ?? config.defaultVaultAddress,
+    expiresAfter: typeof config.defaultExpiresAfter === "number"
+      ? config.defaultExpiresAfter
+      : await config.defaultExpiresAfter?.(),
+  });
+  return await createL1ActionParams(config, request);
 }
